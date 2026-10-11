@@ -1,0 +1,22 @@
+name: Verify learning lab
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm run check && npm test
+      - run: python -m unittest discover -s tests -p 'test_*.py'
+      - run: cc -O2 -std=c11 -Wall -Wextra -Werror -pedantic experiments/locality.c -o locality && ./locality 4096 3
+      - run: python experiments/benchmark.py --size 128 --repeats 3 && python experiments/sqlite_index.py
